@@ -1,9 +1,9 @@
 name: Auto Reading Bot
 
 on:
-  # 每天北京时间 08:15，时长由仓库 Secret TARGET_DURATION 设置为 60 分钟
+  # 每天北京时间 06:15，时长由仓库 Secret TARGET_DURATION 设置为 90 分钟
   schedule:
-    - cron: '15 0 * * *'    # UTC 00:15 = 北京时间 08:15
+    - cron: '15 22 * * *'    # UTC 前一天 22:15 = 北京时间 06:15
   
   # 拉取请求触发，用于测试阅读
   pull_request:

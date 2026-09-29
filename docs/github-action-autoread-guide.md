@@ -187,12 +187,12 @@ curl 'https://weread.qq.com/web/book/read' -H 'cookie: wr_skey=user2; ...' --dat
 
 #### 定时触发（可选）
 
-本仓库的 `.github/workflows/auto-reading.yml` 已配置为每天北京时间 08:15 运行，仓库 Secret `TARGET_DURATION` 设置为 `60`，即每次目标阅读 60 分钟。手动运行时填写阅读时长可以覆盖本次任务的默认值。
+本仓库的 `.github/workflows/auto-reading.yml` 已配置为每天北京时间 06:15 运行，仓库 Secret `TARGET_DURATION` 设置为 `90`，即每次目标阅读 90 分钟。手动运行时填写阅读时长可以覆盖本次任务的默认值。
 
 ```yaml
 on:
   schedule:
-    - cron: '15 0 * * *'   # UTC 00:15 = 北京时间 08:15
+    - cron: '15 22 * * *'   # UTC 前一天 22:15 = 北京时间 06:15
 ```
 
 ## ⚙️ 配置参数说明
@@ -299,7 +299,7 @@ A: 是的，GitHub 免费账户每月有 2000 分钟的 Actions 使用时间。�
 
 ### Q: 如何设置定时运行？
 
-A: 修改 `.github/workflows/auto-reading.yml` 中 `schedule` 的 cron 表达式，注意时间为 UTC 时间。本仓库使用 `15 0 * * *`，即北京时间每天 08:15。默认阅读时长通过仓库 Secret `TARGET_DURATION` 设置，当前部署值为 `60`。
+A: 修改 `.github/workflows/auto-reading.yml` 中 `schedule` 的 cron 表达式，注意时间为 UTC 时间。本仓库使用 `15 22 * * *`，即北京时间每天 06:15。默认阅读时长通过仓库 Secret `TARGET_DURATION` 设置，当前部署值为 `90`。
 
 ### Q: GitHub Actions 里的执行历史保存在哪里？
 
