@@ -172,6 +172,7 @@ notification:
         token: "your_ntfy_token_here"
     
     # 通道7：飞书
+    # GitHub Actions 兼容 FEISHU_WEBHOOK_URL 或 FEISHU_NOTICER Secret。
     - name: "feishu"
       enabled: false
       config:
