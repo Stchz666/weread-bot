@@ -1431,6 +1431,17 @@ class ConfigManager:
         if not channels:
             channels = self._create_channels_from_env_vars()
 
+        extra_feishu_url = self._get_env_override("FEISHU_WEBHOOK_URL_2")
+        if extra_feishu_url:
+            channels.append(NotificationChannel(
+                name="feishu",
+                enabled=True,
+                config={
+                    "webhook_url": extra_feishu_url,
+                    "msg_type": self._get_env_override("FEISHU_MSG_TYPE") or "text",
+                },
+            ))
+
         return channels
 
     def _apply_env_overrides_to_channel(

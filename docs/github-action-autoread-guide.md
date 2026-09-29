@@ -101,6 +101,7 @@ curl 'https://weread.qq.com/web/book/read' -H 'cookie: wr_skey=user2; ...' --dat
 | Secret 名称 | 说明 |
 |------------|------|
 | `FEISHU_WEBHOOK_URL` | 飞书机器人 Webhook URL；本仓库也兼容 `FEISHU_NOTICER`，前者优先 |
+| `FEISHU_WEBHOOK_URL_2` | 可选的第二个飞书机器人，与第一个机器人接收相同通知 |
 | `FEISHU_MSG_TYPE` | 消息类型：text/rich_text（可选） |
 
 > **获取方式**：

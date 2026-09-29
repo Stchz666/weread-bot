@@ -30,6 +30,20 @@ class ConfigValidationTests(unittest.TestCase):
             ]
         )
 
+    def test_second_feishu_preserves_primary_channel(self):
+        path = self._config_file("{}")
+        env = {
+            "FEISHU_WEBHOOK_URL": "https://example.invalid/primary",
+            "FEISHU_WEBHOOK_URL_2": "https://example.invalid/secondary",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            config = self.bot.ConfigManager(path).config
+        channels = config.notification.channels
+        self.assertEqual([c.name for c in channels], ["feishu", "feishu"])
+        self.assertEqual(
+            [c.config["webhook_url"] for c in channels], list(env.values())
+        )
+
     def test_yaml_syntax_error_raises_config_error(self):
         path = self._config_file("reading: [unterminated\n")
         with self.assertRaises(self.bot.ConfigError):
