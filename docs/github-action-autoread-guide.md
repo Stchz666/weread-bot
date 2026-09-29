@@ -187,14 +187,12 @@ curl 'https://weread.qq.com/web/book/read' -H 'cookie: wr_skey=user2; ...' --dat
 
 #### 定时触发（可选）
 
-Fork 后默认不会自动定时运行，因为仓库中的 `.github/workflows/auto-reading.yml` 仍然把 `schedule` 注释掉了。若希望自动定时运行，必须先取消该注释，再按需要调整 cron 表达式：
+本仓库的 `.github/workflows/auto-reading.yml` 已配置为每天北京时间 08:15 运行，仓库 Secret `TARGET_DURATION` 设置为 `60`，即每次目标阅读 60 分钟。手动运行时填写阅读时长可以覆盖本次任务的默认值。
 
 ```yaml
 on:
-  # 取消注释以下行启用定时触发
   schedule:
-    - cron: '0 0 * * *'    # UTC 00:00 = 北京时间 08:00
-    - cron: '0 12 * * *'   # UTC 12:00 = 北京时间 20:00
+    - cron: '15 0 * * *'   # UTC 00:15 = 北京时间 08:15
 ```
 
 ## ⚙️ 配置参数说明
@@ -301,7 +299,7 @@ A: 是的，GitHub 免费账户每月有 2000 分钟的 Actions 使用时间。�
 
 ### Q: 如何设置定时运行？
 
-A: 先取消 `.github/workflows/auto-reading.yml` 中 `schedule` 部分的注释，并根据需要调整 cron 表达式。注意时间为 UTC 时间。如果你 fork 后不想继续改代码，但想调整默认阅读时长，可以额外配置仓库 Secret `TARGET_DURATION`，例如 `5-10`。
+A: 修改 `.github/workflows/auto-reading.yml` 中 `schedule` 的 cron 表达式，注意时间为 UTC 时间。本仓库使用 `15 0 * * *`，即北京时间每天 08:15。默认阅读时长通过仓库 Secret `TARGET_DURATION` 设置，当前部署值为 `60`。
 
 ### Q: GitHub Actions 里的执行历史保存在哪里？
 
