@@ -1,3 +1,4 @@
+# 第二个账号由独立 Actions 工作流运行：北京时间 06:20，40 分钟；使用 WEREAD_CURL_STRING_2 / TARGET_DURATION_2 Secrets。
 # 微信读书阅读机器人配置文件
 # https://github.com/funnyzak/weread-bot
 # 配置优先级：环境变量 > config.yaml > 默认值
