@@ -435,6 +435,7 @@ class UserConfig:
     content: str = ""
     cookie_refresh_ql: Optional[bool] = None
     reading_overrides: Dict[str, Any] = field(default_factory=dict)
+    start_delay_seconds: int = 0
 
 
 @dataclass
@@ -933,6 +934,10 @@ def validate_config_semantics(config: WeReadConfig) -> None:
     parse_int(config.history.max_entries, "history.max_entries", 1)
 
     for index, user in enumerate(config.users):
+        user.start_delay_seconds = parse_int(
+            user.start_delay_seconds,
+            f"curl_config.users[{index}].start_delay_seconds", 0,
+        )
         base = f"curl_config.users[{index}].reading_overrides"
         overrides = user.reading_overrides
         if "mode" in overrides:
@@ -1524,6 +1529,7 @@ class ConfigManager:
                         name=user_data.get("name"),
                         file_path=user_data.get("file_path", ""),
                         content=user_data.get("content", ""),
+                        start_delay_seconds=user_data.get("start_delay_seconds", 0),
                         cookie_refresh_ql=cookie_refresh_ql,
                         reading_overrides=user_data.get(
                             "reading_overrides", {}
@@ -3246,6 +3252,10 @@ class WeReadApplication:
         tasks = []
 
         async def run_for_user(user_config: UserConfig):
+            if user_config.start_delay_seconds:
+                await interruptible_sleep(
+                    user_config.start_delay_seconds, instance.is_shutdown_requested
+                )
             if instance.is_shutdown_requested():
                 logging.info("📡 收到关闭信号，跳过后续用户")
                 return user_config.name, SessionResult(
@@ -3326,7 +3336,7 @@ class WeReadApplication:
             skipped_users=skipped_users,
             continue_on_failure=True,
         )
-        await cls._generate_multi_user_summary(instance, run_result)
+        await cls._generate_multi_user_summary(instance, run_result, session_results)
         return run_result
 
     @classmethod
@@ -3334,6 +3344,7 @@ class WeReadApplication:
         cls,
         instance,
         run_result: RunResult,
+        session_results: Optional[List[SessionResult]] = None,
     ):
         """生成多用户会话总结"""
         summary = f"""🎭 多用户阅读会话总结
@@ -3354,6 +3365,27 @@ class WeReadApplication:
                    if run_result.failure_categories else '无'}
 
 最终状态: {run_result.final_status}"""
+
+        if session_results:
+            by_name = {result.stats.user_name: result for result in session_results}
+            details = []
+            status_names = {
+                SessionStatus.SUCCESS: "成功",
+                SessionStatus.FAILED: "失败",
+                SessionStatus.CANCELLED: "取消",
+            }
+            for user in instance.config.users:
+                result = by_name.get(user.name)
+                if result is None:
+                    continue
+                stats = result.stats
+                duration = stats.actual_duration_seconds
+                details.append(
+                    f"{user.name}：{status_names[result.status]}，"
+                    f"阅读 {duration // 60}分{duration % 60}秒，"
+                    f"成功请求 {stats.successful_reads} 次，失败 {stats.failed_reads} 次"
+                )
+            summary += "\n\n👤 账号明细:\n" + "\n".join(details)
 
         logging.info("📊 多用户会话总结:")
         logging.info(summary)

@@ -11,6 +11,54 @@ class ApplicationResultTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.bot = load_weread_bot()
 
+    async def test_combined_summary_waits_for_both_named_accounts(self):
+        bot = self.bot
+        config = bot.WeReadConfig(max_concurrent_users=2)
+        config.users = [bot.UserConfig(name="Stchz"),
+                        bot.UserConfig(name="木衫", start_delay_seconds=300)]
+        app = object.__new__(bot.WeReadApplication)
+        app.config = config
+        app._shutdown_event = bot.asyncio.Event()
+        finished_first = bot.asyncio.Event()
+        release_second = bot.asyncio.Event()
+        sent = AsyncMock()
+
+        def make_manager(_config, user, **kwargs):
+            async def run():
+                if user.name == "Stchz":
+                    finished_first.set()
+                else:
+                    await release_second.wait()
+                return bot.SessionResult(
+                    bot.SessionStatus.SUCCESS,
+                    bot.ReadingSession(user_name=user.name,
+                                       actual_duration_seconds=60,
+                                       successful_reads=2),
+                )
+            manager = unittest.mock.MagicMock()
+            manager.start_reading_session = run
+            return manager
+
+        with (
+            patch.object(bot, "WeReadSessionManager", side_effect=make_manager),
+            patch.object(bot, "interruptible_sleep", new=AsyncMock(return_value=True)) as sleep,
+            patch.object(bot.NotificationService, "send_notification_async", new=sent),
+        ):
+            task = bot.asyncio.create_task(bot.WeReadApplication._run_multi_user_sessions(app))
+            await finished_first.wait()
+            await bot.asyncio.sleep(0)
+            sent.assert_not_awaited()
+            release_second.set()
+            result = await task
+        self.assertEqual(result.successful_users, 2)
+        sleep.assert_awaited_once()
+        self.assertEqual(sleep.await_args.args[0], 300)
+        sent.assert_awaited_once()
+        message = sent.await_args.args[0]
+        self.assertIn("Stchz：成功", message)
+        self.assertIn("木衫：成功", message)
+        self.assertEqual(sent.await_args.kwargs["event"], bot.NotificationEvent.MULTI_USER_SUMMARY)
+
     def test_run_result_status_and_exit_codes(self):
         success = self.bot.RunResult(final_status="success", user_count=1)
         partial = self.bot.RunResult(

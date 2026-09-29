@@ -2,7 +2,7 @@
 
 ## 📋 概述
 
-本仓库的第二个账号使用独立工作流 `auto-reading-account-2.yml`（Actions 名称 `Auto Reading Bot - Account 2`），每天北京时间 06:20 开始，目标阅读 40 分钟。凭证保存在 `WEREAD_CURL_STRING_2`，时长保存在 `TARGET_DURATION_2`，两个飞书机器人均接收结果通知。第一个账号继续按 06:15、90 分钟运行。
+本仓库每日合并运行两个账号：Stchz 于北京时间 06:15 启动、目标90分钟；木衫延后300秒启动、目标40分钟。两者并发运行，全部结束后才向两个飞书机器人各发送一份汇总，包含两位用户的名称、状态和时长。GitHub Actions 调度可能延迟，木衫以任务启动后的300秒为间隔。第二个账号凭证和时长使用 `WEREAD_CURL_STRING_2` / `TARGET_DURATION_2`。手动短测可设置 `target_duration=1`、`second_target_duration=1`、`second_start_delay=0`。
 
 使用 GitHub Action 可以让你的微信读书自动阅读程序在云端自动运行，无需本地电脑24小时开机。本指南将详细介绍如何配置和使用 GitHub Action 进行自动阅读。
 

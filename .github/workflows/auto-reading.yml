@@ -1,19 +1,14 @@
 name: Auto Reading Bot
 
+concurrency:
+  group: weread-daily-accounts
+  cancel-in-progress: false
+
 on:
-  # 每天北京时间 06:15，时长由仓库 Secret TARGET_DURATION 设置为 90 分钟
+  # Stchz 06:15 / 90分钟；木衫延后5分钟启动 / 40分钟；全部结束后统一通知
   schedule:
     - cron: '15 22 * * *'    # UTC 前一天 22:15 = 北京时间 06:15
   
-  # 拉取请求触发，用于测试阅读
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'weread-bot.py'
-      - 'requirements.txt'
-      - '.github/workflows/auto-reading.yml'
-      - '.github/workflows/ci.yml'
-
   # 手动触发
   workflow_dispatch:
     inputs:
@@ -21,6 +16,16 @@ on:
         description: '阅读时长（分钟，格式：10-20。留空时优先使用仓库 Secret TARGET_DURATION，否则默认 1-2）'
         required: false
         default: ''
+        type: string
+      second_target_duration:
+        description: '木衫阅读分钟数，留空使用 TARGET_DURATION_2（默认40）'
+        required: false
+        default: ''
+        type: string
+      second_start_delay:
+        description: '木衫延后启动秒数；日常300，短时测试可填0'
+        required: false
+        default: '300'
         type: string
       reading_mode:
         description: '阅读模式'
@@ -147,6 +152,42 @@ jobs:
           persist_runtime_error: true
         EOF
 
+    - name: Configure named accounts and combined notification
+      env:
+        ACCOUNT_ONE_CURL: ${{ secrets.WEREAD_CURL_STRING }}
+        ACCOUNT_TWO_CURL: ${{ secrets.WEREAD_CURL_STRING_2 }}
+        SECOND_DURATION: ${{ inputs.second_target_duration || secrets.TARGET_DURATION_2 || '40' }}
+        SECOND_DELAY: ${{ inputs.second_start_delay || '300' }}
+      run: |
+        python - <<'PYTHON'
+        import os
+        from pathlib import Path
+        import yaml
+        config = yaml.safe_load(Path('config.yaml').read_text())
+        config['app']['max_concurrent_users'] = 2
+        config['curl_config'] = {'users': []}
+        for name, key, duration, delay in [
+            ('Stchz', 'ACCOUNT_ONE_CURL', os.environ['TARGET_DURATION'], 0),
+            ('木衫', 'ACCOUNT_TWO_CURL', os.environ['SECOND_DURATION'], int(os.environ['SECOND_DELAY'])),
+        ]:
+            if not os.environ[key].strip():
+                raise SystemExit(f'{name}: missing credential')
+            path = Path(os.environ['RUNNER_TEMP']) / (key + '.txt')
+            path.write_text(os.environ[key])
+            path.chmod(0o600)
+            config['curl_config']['users'].append({
+                'name': name, 'file_path': str(path),
+                'start_delay_seconds': delay,
+                'reading_overrides': {'target_duration': duration},
+            })
+        config['notification']['only_on_failure'] = False
+        config['notification']['triggers'] = {
+            'session_success': False, 'session_failure': False,
+            'runtime_error': False, 'general': False, 'multi_user_summary': True,
+        }
+        Path('config.yaml').write_text(yaml.safe_dump(config, allow_unicode=True))
+        PYTHON
+
     - name: Create logs directory
       run: mkdir -p logs
 
@@ -157,7 +198,7 @@ jobs:
         # 多用户 cURL：在 WEREAD_CURL_STRING 中放置多段 curl，段与段之间至少插入两个空行
         WEREAD_CURL_STRING: ${{ secrets.WEREAD_CURL_STRING }}
         # 多用户并发控制，未设置默认 1（顺序执行）
-        MAX_CONCURRENT_USERS: ${{ secrets.MAX_CONCURRENT_USERS || 1 }}
+        MAX_CONCURRENT_USERS: 2
         # 单用户连续阅读失败上限，未设置时默认 5
         MAX_CONSECUTIVE_FAILURES: ${{ secrets.MAX_CONSECUTIVE_FAILURES || 5 }}
         # 通知相关环境变量
@@ -192,7 +233,7 @@ jobs:
         SERVERCHAN3_SHORT: ${{ secrets.SERVERCHAN3_SHORT }}
         PUSHDEER_PUSHKEY: ${{ secrets.PUSHDEER_PUSHKEY }}
         PUSHDEER_TYPE: ${{ secrets.PUSHDEER_TYPE }}
-        NOTIFICATION_ONLY_ON_FAILURE: ${{ secrets.NOTIFICATION_ONLY_ON_FAILURE || github.event.inputs.notify_only_on_failure == 'true' || 'false' }}
+        NOTIFICATION_ONLY_ON_FAILURE: 'false'
         HISTORY_ENABLED: ${{ secrets.HISTORY_ENABLED || github.event.inputs.history_enabled == 'true' || 'true' }}
         HISTORY_FILE: ${{ secrets.HISTORY_FILE || 'logs/run-history.json' }}
         HISTORY_MAX_ENTRIES: ${{ secrets.HISTORY_MAX_ENTRIES || github.event.inputs.history_max_entries || '50' }}

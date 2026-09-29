@@ -1,4 +1,4 @@
-# 第二个账号由独立 Actions 工作流运行：北京时间 06:20，40 分钟；使用 WEREAD_CURL_STRING_2 / TARGET_DURATION_2 Secrets。
+# 合并任务：Stchz 06:15 / 90分钟；木衫延后300秒 / 40分钟；全部完成后汇总通知。
 # 微信读书阅读机器人配置文件
 # https://github.com/funnyzak/weread-bot
 # 配置优先级：环境变量 > config.yaml > 默认值
@@ -32,6 +32,7 @@ curl_config:
         reading_interval: "30-48"
     
     - name: "user2"
+      start_delay_seconds: 300  # 相对任务启动的延迟，两个账号需 max_concurrent_users: 2
       file_path: "user2_curl.txt"
       # reading_overrides：可选，覆盖全局 reading 配置，未写则用全局值
       reading_overrides:
