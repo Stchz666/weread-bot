@@ -679,7 +679,11 @@ class RunResult:
 
     @property
     def exit_code(self) -> int:
-        return 0 if self.final_status == "success" else 1
+        if self.final_status == "success":
+            return 0
+        if self.final_status == "partial_success" and self.continue_on_failure:
+            return 0
+        return 1
 
     def to_summary_dict(self) -> Dict[str, Any]:
         return {

@@ -67,6 +67,13 @@ class ApplicationResultTests(unittest.IsolatedAsyncioTestCase):
             successful_users=1,
             failed_users=1,
         )
+        partial_continue = self.bot.RunResult(
+            final_status="partial_success",
+            user_count=2,
+            successful_users=1,
+            failed_users=1,
+            continue_on_failure=True,
+        )
         failed = self.bot.RunResult(
             final_status="failed", user_count=1, failed_users=1
         )
@@ -76,6 +83,7 @@ class ApplicationResultTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(success.exit_code, 0)
         self.assertEqual(partial.exit_code, 1)
+        self.assertEqual(partial_continue.exit_code, 0)
         self.assertEqual(failed.exit_code, 1)
         self.assertEqual(cancelled.exit_code, 1)
         self.assertEqual(partial.to_summary_dict()["final_status"], "partial_success")
