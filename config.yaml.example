@@ -1,3 +1,4 @@
+# Actions cron: 15 22 * * 0-6（UTC），每天北京时间06:15。
 # 合并任务：Stchz 06:15 / 90分钟；木衫延后300秒 / 40分钟；全部完成后汇总通知。
 # 微信读书阅读机器人配置文件
 # https://github.com/funnyzak/weread-bot

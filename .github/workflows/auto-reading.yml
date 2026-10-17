@@ -7,7 +7,7 @@ concurrency:
 on:
   # Stchz 06:15 / 90分钟；木衫延后5分钟启动 / 40分钟；全部结束后统一通知
   schedule:
-    - cron: '15 22 * * *'    # UTC 前一天 22:15 = 北京时间 06:15
+    - cron: '15 22 * * 0-6'    # UTC 前一天 22:15 = 北京时间 06:15
   
   # 手动触发
   workflow_dispatch:

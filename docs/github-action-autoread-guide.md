@@ -195,7 +195,7 @@ curl 'https://weread.qq.com/web/book/read' -H 'cookie: wr_skey=user2; ...' --dat
 ```yaml
 on:
   schedule:
-    - cron: '15 22 * * *'   # UTC 前一天 22:15 = 北京时间 06:15
+    - cron: '15 22 * * 0-6'   # UTC 前一天 22:15 = 北京时间 06:15
 ```
 
 ## ⚙️ 配置参数说明
@@ -302,7 +302,7 @@ A: 是的，GitHub 免费账户每月有 2000 分钟的 Actions 使用时间。�
 
 ### Q: 如何设置定时运行？
 
-A: 修改 `.github/workflows/auto-reading.yml` 中 `schedule` 的 cron 表达式，注意时间为 UTC 时间。本仓库使用 `15 22 * * *`，即北京时间每天 06:15。默认阅读时长通过仓库 Secret `TARGET_DURATION` 设置，当前部署值为 `90`。
+A: 修改 `.github/workflows/auto-reading.yml` 中 `schedule` 的 cron 表达式，注意时间为 UTC 时间。本仓库使用 `15 22 * * 0-6`，即北京时间每天 06:15。默认阅读时长通过仓库 Secret `TARGET_DURATION` 设置，当前部署值为 `90`。
 
 ### Q: GitHub Actions 里的执行历史保存在哪里？
 
@@ -333,3 +333,7 @@ A: 查看运行日志中的错误信息：
 ---
 
 如有问题或建议，欢迎在 [Issues](../../issues) 中反馈。
+
+### 2026-10-17 定时触发排查
+
+10月14日定时运行成功，15至17日未生成定时记录；16日手动补跑成功。仓库与工作流均显示启用。依据 [GitHub 官方排障文档](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#scheduled-workflow-stopped-running)，提交 cron 更新以尝试恢复定时触发，将 `15 22 * * *` 改为等价的 `15 22 * * 0-6`，仍为北京时间每天06:15。该处理不证明具体停用原因，也不能通过手动运行证明定时已恢复；需要下一次 schedule 记录验证。
